@@ -18,9 +18,14 @@
 ``` 
 python -m venv cs4250 
 ```
-
+- For Windows User:
 ``` 
 ./cs4250/Scripts/activate
+```
+
+- For Mac Users:
+```
+source cs4250/bin/activate
 ```
 #### Download all necessary python packages 
 ```
