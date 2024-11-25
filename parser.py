@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 import pymongo
+import re
 
 def getDict(source, target):
     result = source.find_one({'title': target})
@@ -13,7 +14,12 @@ def getFacultyTags(html):
 
 def storeInfo(html, dest):
     name_tag = html.find('h3')
+    # Extract the text and clean up text
     name = name_tag.get_text(strip=True) if name_tag else None
+    if name:
+        name = re.sub(r'\\n', ' ', name)  # Remove escaped newline characters
+        name = re.sub(r'[\n\r]+', ' ', name)  # Remove actual newlines (\r and \n)
+        name = re.sub(r'\s+', ' ', name).strip()  # Replace multiple spaces with a single space
 
     title_tag = html.find('div', {'class': 'mb-1 text-muted'})
     title = title_tag.get_text(strip=True) if title_tag else None
@@ -25,6 +31,7 @@ def storeInfo(html, dest):
         info['title'] = title
         print(info)  # Debugging: Print the extracted information
         dest.insert_one(info)
+
 
 def getInfo(html):
     result = {}
