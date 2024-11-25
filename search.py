@@ -5,12 +5,23 @@ import re
 BASE_URL = "https://www.cpp.edu"  # Replace with the base URL of the site
 # Function to fetch the About section
 def fetch_about_section(soup):
-    about_section = soup.find('h2', string=re.compile(r'About Me'))
-    if about_section:
-        parent = about_section.find_parent("div", class_="section-intro")
-        if parent:
-            return parent.get_text(strip=True)
-    return None
+    try:
+        # Find the heading with "About" followed by anything (e.g., name)
+        about_header = soup.find('h2', string=re.compile(r'About\s+.*', re.IGNORECASE))
+        
+        if about_header:
+            # Find the parent element containing the content under "About"
+            parent_div = about_header.find_parent('div', class_='section-intro')
+            if parent_div:
+                # Extract the content in the section
+                about_content = parent_div.find('div', class_='section-menu')
+                if about_content:
+                    return about_content.get_text(separator="\n", strip=True)  # Return cleaned text
+        return None
+    except Exception as e:
+        print(f"Error fetching About section: {e}")
+        return None
+
 
 # Function to fetch the Selected Publications section
 def fetch_publications_section(soup):
@@ -37,21 +48,16 @@ def fetch_accolades_section(soup):
 
 def fetch_and_store_data(url):
     try:
-        # Construct absolute URL if the provided URL is relative
         if not url.startswith("http"):
             url = BASE_URL + url
-        
+
         html = urlopen(url)
         page = html.read()
         soup = BeautifulSoup(page, 'html.parser')
 
-        # Extract About section
+        # Extract dynamic sections
         about_section = fetch_about_section(soup)
-
-        # Extract Selected Publications section
         publications_section = fetch_publications_section(soup)
-
-        # Extract dynamic content from Accolades section
         accolades_content = fetch_accolades_section(soup)
 
         return {
@@ -62,6 +68,7 @@ def fetch_and_store_data(url):
     except Exception as e:
         print(f"Error fetching data from {url}: {e}")
         return None
+
 
 def main():
     # MongoDB connection
