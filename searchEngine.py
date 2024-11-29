@@ -89,8 +89,15 @@ def displayResults(results):
 # Main search function
 def main():
     done = False
+    print("Type 'exit' or 'quit' to stop the search at any time.")
     while not done:
         query = input("Enter your search query: ").strip()
+
+        # Check if the user wants to exit
+        if query.lower() in ['exit', 'quit']:
+            print("Exiting the search engine.")
+            done = True
+            continue
 
         facultyData = retrieveProfessors()
         vectorizer, tfidfMatrix = createTFIDFVectorizer(facultyData)
@@ -101,6 +108,7 @@ def main():
             displayResults(search_results)
         else:
             print("No results found.")
+
 
 if __name__ == '__main__':
     main()
