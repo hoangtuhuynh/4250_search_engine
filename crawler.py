@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import pymongo
 import re
 
-def FindTargetPage(frontier, targetTitle, col):
+def find_target_page(frontier, target_title, col):
     for site in frontier:
         print(f"Processing URL: {site}")
         base = re.match(r'https://\w*\.\w+\.\w+', site).group()
@@ -11,7 +11,7 @@ def FindTargetPage(frontier, targetTitle, col):
         html = urlopen(site).read()
         bs = BeautifulSoup(html, 'html.parser')
         title = bs.find('title').getText().strip()
-        storePage(title, site, html, col)
+        store_page(title, site, html, col)
 
         # Find the links on the page
         links = bs.find_all('a', {'href': re.compile('/')})
@@ -36,29 +36,23 @@ def FindTargetPage(frontier, targetTitle, col):
             if url not in frontier:
                 frontier.append(url)
 
-        if title == targetTitle:
+        if title == target_title:
             break
 
-def storePage(title, url, html, col):
+def store_page(title, url, html, col):
     doc = {'title': title,
            'url': url,
            'html': str(html)}
-    
     col.insert_one(doc)
 
+def run_crawler(seed_url, target_title, mongo_connection):
+    # Use provided seed URL and target title
+    frontier = [seed_url]
 
-def main():
-    seed = 'https://www.cpp.edu/cba/international-business-marketing/index.shtml'
-    frontier = [seed]
-
-    target = 'Faculty & Staff Directory'  #  target title
-
-    client = pymongo.MongoClient(host='localhost', port=27017)
-    db = client.cs4250project
+    # Use the MongoDB connection
+    db = mongo_connection.cs4250project
     pages = db.pages
 
-    FindTargetPage(frontier, target, pages)
+    find_target_page(frontier, target_title, pages)
 
     print('Crawling completed.')
-if __name__ == '__main__':
-    main()

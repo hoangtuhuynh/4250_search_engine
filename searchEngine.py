@@ -2,20 +2,14 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import pymongo
 
-
-# Connect to MongoDB
-client = pymongo.MongoClient(host='localhost', port=27017)
-db = client.cs4250project
-professors = db.professors
-
+BASE_URL = "https://www.cpp.edu"  # Replace with the correct base URL of your website
 
 # Retrieve all faculty pages from MongoDB
-def retrieveProfessors():
-    return list(professors.find())
-
+def retrieve_professors(professors_collection):
+    return list(professors_collection.find())
 
 # Pre-process and vectorize documents
-def createTFIDFVectorizer(professors):
+def create_tfidf_vectorizer(professors):
     documents = [
         (
             (professor.get('name', '') or '') + " " +
@@ -30,30 +24,33 @@ def createTFIDFVectorizer(professors):
         for professor in professors
     ]
     vectorizer = TfidfVectorizer(stop_words='english')
-    tfidfMatrix = vectorizer.fit_transform(documents)
-    return vectorizer, tfidfMatrix
-
+    tfidf_matrix = vectorizer.fit_transform(documents)
+    return vectorizer, tfidf_matrix
 
 # Search the database for relevant faculty members based on the query
-def search(query, vectorizer, tfidfMatrix, professors):
-    queryVectorizer = vectorizer.transform([query])
-    similarities = cosine_similarity(queryVectorizer, tfidfMatrix).flatten()
+def search(query, vectorizer, tfidf_matrix, professors):
+    query_vectorizer = vectorizer.transform([query])
+    similarities = cosine_similarity(query_vectorizer, tfidf_matrix).flatten()
 
     # Sort the results by similarity score
-    sortedIndeces = similarities.argsort()[::-1]
+    sorted_indices = similarities.argsort()[::-1]
 
     # Return sorted documents and their similarity scores
     results = []
-    for index in sortedIndeces:
+    for index in sorted_indices:
         if similarities[index] > 0:
             professor = professors[index]
+            profile_url = professor.get('profile', 'N/A')
+            if profile_url != 'N/A' and not profile_url.startswith('http'):
+                profile_url = f"{BASE_URL}{profile_url}"  # Prepend the base URL if needed
+
             result = {
                 'name': professor['name'],
                 'title': professor.get('title', 'N/A'),
                 'email': professor.get('email', 'N/A'),
                 'phone': professor.get('phone', 'N/A'),
                 'office': professor.get('office', 'N/A'),
-                'profile': professor.get('profile', 'N/A'),
+                'profile': profile_url,
                 'about': professor.get('about', 'N/A'),
                 'publications': professor.get('publications', 'N/A'),
                 'accolades': professor.get('accolades', {}),
@@ -62,9 +59,8 @@ def search(query, vectorizer, tfidfMatrix, professors):
             results.append(result)
     return results
 
-
 # Display search results
-def displayResults(results):
+def display_results(results):
     print("=" * 50)
     print("Search Results")
     print("=" * 50)
@@ -75,7 +71,7 @@ def displayResults(results):
         print(f"Email: {result['email']}")
         print(f"Phone: {result['phone']}")
         print(f"Office: {result['office']}")
-        print(f"Profile: {result['profile']}")
+        print(f"Profile: {result['profile']}")  # Display URL link for Profile
         print()
         print(f"About: {result['about']}")
         print()
@@ -85,12 +81,22 @@ def displayResults(results):
 
     print("\nEND OF SEARCH RESULTS\n")
 
+# Interactive search engine function
+def run_search_engine(mongo_connection):
+    # Use the MongoDB connection
+    db = mongo_connection['cs4250project']
+    professors_collection = db['professors']
 
-# Main search function
-def main():
+    # Retrieve professor data from MongoDB
+    professors_data = retrieve_professors(professors_collection)
+
+    # Create TF-IDF vectorizer and matrix
+    vectorizer, tfidf_matrix = create_tfidf_vectorizer(professors_data)
+
+    # Interactive search process
     done = False
-    print("Type 'exit' or 'quit' to stop the search at any time.")
     while not done:
+        print("\nType 'exit' or 'quit' to stop the search at any time.")
         query = input("Enter your search query: ").strip()
 
         # Check if the user wants to exit
@@ -99,16 +105,11 @@ def main():
             done = True
             continue
 
-        facultyData = retrieveProfessors()
-        vectorizer, tfidfMatrix = createTFIDFVectorizer(facultyData)
+        # Perform search
+        search_results = search(query, vectorizer, tfidf_matrix, professors_data)
 
-        search_results = search(query, vectorizer, tfidfMatrix, facultyData)
-
+        # Display results
         if search_results:
-            displayResults(search_results)
+            display_results(search_results)
         else:
             print("No results found.")
-
-
-if __name__ == '__main__':
-    main()
