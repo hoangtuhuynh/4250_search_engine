@@ -2,17 +2,17 @@ from bs4 import BeautifulSoup
 import pymongo
 import re
 
-def getDict(source, target):
+def get_dict(source, target):
     result = source.find_one({'title': target})
     if result is None:
         raise ValueError(f"No document found with title: {target}")
     return result
 
-def getFacultyTags(html):
+def get_faculty_tags(html):
     bs = BeautifulSoup(html, 'html.parser')
     return bs.find_all('div', {'class': 'col-md directory-listing'})
 
-def storeInfo(html, dest):
+def store_info(html, dest):
     name_tag = html.find('h3')
     # Extract the text and clean up text
     name = name_tag.get_text(strip=True) if name_tag else None
@@ -24,7 +24,7 @@ def storeInfo(html, dest):
     title_tag = html.find('div', {'class': 'mb-1 text-muted'})
     title = title_tag.get_text(strip=True) if title_tag else None
 
-    info = getInfo(html)
+    info = get_info(html)
 
     if name and title:
         info['name'] = name
@@ -32,8 +32,7 @@ def storeInfo(html, dest):
         print(info)  # Debugging: Print the extracted information
         dest.insert_one(info)
 
-
-def getInfo(html):
+def get_info(html):
     result = {}
     ul_tag = html.find('ul')
     if not ul_tag:
@@ -55,25 +54,24 @@ def getInfo(html):
 
     return result
 
-def main():
-    target = 'Faculty & Staff Directory'
-
-    client = pymongo.MongoClient(host='localhost', port=27017)
-    db = client.cs4250project
+def run_parser(target_title, mongo_connection):
+    # Use the MongoDB connection
+    db = mongo_connection.cs4250project
     pages = db.pages
     professors = db.professors
 
     try:
-        page = getDict(pages, target)
+        # Retrieve the target page's data
+        page = get_dict(pages, target_title)
         if not page:
-            print(f"No page found with title: {target}")
+            print(f"No page found with title: {target_title}")
             return
 
         html = page['html']
-        profs = getFacultyTags(html)
+        profs = get_faculty_tags(html)
 
         for prof in profs:
-            storeInfo(prof, professors)
+            store_info(prof, professors)
             print('\n')
 
     except ValueError as e:
@@ -81,6 +79,4 @@ def main():
     except Exception as e:
         print(f"Unexpected error: {e}")
 
-if __name__ == '__main__':
-    main()
-    print('done')
+    print("Parsing completed.")
