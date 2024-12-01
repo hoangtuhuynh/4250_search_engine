@@ -32,20 +32,10 @@ source cs4250/bin/activate
 pip install -r requirements.txt
 ```
 #### Running the project
-##### Craw the target webpage
+
 
 ```
-python ./crawler.py
+python ./main.py
 ```
 
-##### Parse the target webpage to Mongodb database
 
-```
-python ./crawler.py
-```
-
-##### Take all the search area to form a completed database with all information of professors
-
-```
-python ./search.py
-```
