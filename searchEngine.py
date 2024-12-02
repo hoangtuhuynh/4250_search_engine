@@ -2,7 +2,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import pymongo
 
-BASE_URL = "https://www.cpp.edu"  # Replace with the correct base URL of your website
+BASE_URL = "https://www.cpp.edu"
 
 # Retrieve all faculty pages from MongoDB
 def retrieve_professors(professors_collection):
@@ -28,7 +28,9 @@ def create_tfidf_vectorizer(professors):
     return vectorizer, tfidf_matrix
 
 # Search the database for relevant faculty members based on the query
-def search(query, vectorizer, tfidf_matrix, professors):
+# Threshold is used to make search results more strict
+# ADJUST THRESHOLD VALUE IF NECESSARY (e.g. o.1, o.4, etc.)
+def search(query, vectorizer, tfidf_matrix, professors, threshold=0.1):
     query_vectorizer = vectorizer.transform([query])
     similarities = cosine_similarity(query_vectorizer, tfidf_matrix).flatten()
 
@@ -38,7 +40,7 @@ def search(query, vectorizer, tfidf_matrix, professors):
     # Return sorted documents and their similarity scores
     results = []
     for index in sorted_indices:
-        if similarities[index] > 0:
+        if similarities[index] > threshold:
             professor = professors[index]
             profile_url = professor.get('profile', 'N/A')
             if profile_url != 'N/A' and not profile_url.startswith('http'):

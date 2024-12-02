@@ -3,7 +3,7 @@ from pymongo import MongoClient
 from bs4 import BeautifulSoup
 import re
 
-BASE_URL = "https://www.cpp.edu"  # Replace with the base URL of the site
+BASE_URL = "https://www.cpp.edu"
 
 # Function to fetch the About section
 def fetch_about_section(soup):
