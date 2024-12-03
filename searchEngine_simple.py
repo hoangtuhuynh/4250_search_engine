@@ -27,6 +27,14 @@ def create_tfidf_vectorizer(professors):
     tfidf_matrix = vectorizer.fit_transform(documents)
     return vectorizer, tfidf_matrix
 
+# Limit the description to 50 words
+def truncate_description(description, word_limit=50):
+    if description:
+        words = description.split()
+        if len(words) > word_limit:
+            return ' '.join(words[:word_limit]) + '...'  # Add ellipsis for truncated text
+    return description
+
 # Search the database for relevant faculty members based on the query
 def search(query, vectorizer, tfidf_matrix, professors):
     query_vectorizer = vectorizer.transform([query])
@@ -44,9 +52,11 @@ def search(query, vectorizer, tfidf_matrix, professors):
             if profile_url != 'N/A' and not profile_url.startswith('http'):
                 profile_url = f"{BASE_URL}{profile_url}"  # Prepend the base URL if needed
 
+            truncated_about = truncate_description(professor.get('about', 'N/A'))
+
             result = {
                 'name': professor.get('name', 'N/A'),
-                'about': professor.get('about', 'N/A'),
+                'about': truncated_about,
                 'profile': profile_url,
             }
             results.append(result)
