@@ -5,11 +5,12 @@ import re
 
 BASE_URL = "https://www.cpp.edu"  # Replace with the base URL of the site
 
-# Function to fetch the About section
+# # Function to fetch the About section
 def fetch_about_section(soup):
     try:
         # about_header = soup.find('h2', string=re.compile(r'About\s+.*', re.IGNORECASE))
-        about_header = soup.find('h2', string=re.compile(r'(About|Bio|Short|Biography|Overview)\s+.*', re.IGNORECASE))
+        # about_header = soup.find('h2', string=re.compile(r'(About|Bio|Short|Biography|Overview)\s+.*', re.IGNORECASE))
+        about_header = soup.find(re.compile(r'(h2|h3|p)'), string=re.compile(r'(About|Bio|Short|Biography|Overview)', re.IGNORECASE))
 
         if about_header:
             parent_div = about_header.find_parent('div', class_='section-intro')
@@ -21,6 +22,8 @@ def fetch_about_section(soup):
     except Exception as e:
         print(f"Error fetching About section: {e}")
         return None
+
+
 
 # Function to fetch the Selected Publications section
 def fetch_publications_section(soup):
