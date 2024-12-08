@@ -8,7 +8,6 @@ BASE_URL = "https://www.cpp.edu"  # Replace with the base URL of the site
 # # Function to fetch the About section
 def fetch_about_section(soup):
     try:
-        # about_header = soup.find('h2', string=re.compile(r'About\s+.*', re.IGNORECASE))
         # about_header = soup.find('h2', string=re.compile(r'(About|Bio|Short|Biography|Overview)\s+.*', re.IGNORECASE))
         about_header = soup.find(re.compile(r'(h2|h3|p)'), string=re.compile(r'(About|Bio|Short|Biography|Overview)', re.IGNORECASE))
 
