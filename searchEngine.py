@@ -2,7 +2,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import pymongo
 
-BASE_URL = "https://www.cpp.edu"
+BASE_URL = "https://www.cpp.edu"  # Replace with the correct base URL of your website
 
 # Retrieve all faculty pages from MongoDB
 def retrieve_professors(professors_collection):
@@ -27,10 +27,16 @@ def create_tfidf_vectorizer(professors):
     tfidf_matrix = vectorizer.fit_transform(documents)
     return vectorizer, tfidf_matrix
 
+# Limit the description to 50 words
+def truncate_description(description, word_limit=50):
+    if description:
+        words = description.split()
+        if len(words) > word_limit:
+            return ' '.join(words[:word_limit]) + '...'  # Add ellipsis for truncated text
+    return description
+
 # Search the database for relevant faculty members based on the query
-# Threshold is used to make search results more strict
-# ADJUST THRESHOLD VALUE IF NECESSARY (e.g. o.1, o.4, etc.)
-def search(query, vectorizer, tfidf_matrix, professors, threshold=0.1):
+def search(query, vectorizer, tfidf_matrix, professors):
     query_vectorizer = vectorizer.transform([query])
     similarities = cosine_similarity(query_vectorizer, tfidf_matrix).flatten()
 
@@ -40,11 +46,13 @@ def search(query, vectorizer, tfidf_matrix, professors, threshold=0.1):
     # Return sorted documents and their similarity scores
     results = []
     for index in sorted_indices:
-        if similarities[index] > threshold:
+        if similarities[index] > 0:
             professor = professors[index]
             profile_url = professor.get('profile', 'N/A')
             if profile_url != 'N/A' and not profile_url.startswith('http'):
                 profile_url = f"{BASE_URL}{profile_url}"  # Prepend the base URL if needed
+                
+            truncated_about = truncate_description(professor.get('about', 'N/A'))
 
             result = {
                 'name': professor['name'],
@@ -53,7 +61,7 @@ def search(query, vectorizer, tfidf_matrix, professors, threshold=0.1):
                 'phone': professor.get('phone', 'N/A'),
                 'office': professor.get('office', 'N/A'),
                 'profile': profile_url,
-                'about': professor.get('about', 'N/A'),
+                'about': truncated_about,
                 'publications': professor.get('publications', 'N/A'),
                 'accolades': professor.get('accolades', {}),
                 'similarity': similarities[index]
@@ -68,6 +76,7 @@ def display_results(results):
     print("=" * 50)
 
     for result in results:
+        print(f"Similarity Score: {result['similarity']:.4f}")  # Show similarity with 4 decimal places
         print(f"Name: {result['name']}")
         print(f"Title: {result['title']}")
         print(f"Email: {result['email']}")
