@@ -9,7 +9,7 @@ BASE_URL = "https://www.cpp.edu"  # Replace with the base URL of the site
 def fetch_about_section(soup):
     try:
         # about_header = soup.find('h2', string=re.compile(r'About\s+.*', re.IGNORECASE))
-        about_header = soup.find('h2', string=re.compile(r'(About|Biography|Short|Profile|Bio|Overview)\s+.*', re.IGNORECASE))
+        about_header = soup.find('h2', string=re.compile(r'(About|Bio|Short|Biography|Overview)\s+.*', re.IGNORECASE))
 
         if about_header:
             parent_div = about_header.find_parent('div', class_='section-intro')

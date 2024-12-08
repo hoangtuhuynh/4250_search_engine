@@ -58,6 +58,7 @@ def search(query, vectorizer, tfidf_matrix, professors):
                 'name': professor.get('name', 'N/A'),
                 'about': truncated_about,
                 'profile': profile_url,
+                'similarity': similarities[index]
             }
             results.append(result)
     return results
@@ -69,12 +70,14 @@ def display_results(results):
     print("=" * 50)
 
     for result in results:
+        print(f"Similarity Score: {result['similarity']:.4f}")  # Show similarity with 4 decimal places
         print(f"Name: {result['name']}")
         print(f"Description: {result['about']}")
         print(f"Profile URL: {result['profile']}")
         print("-" * 50)
 
     print("\nEND OF SEARCH RESULTS\n")
+
 
 # Interactive search engine function
 def run_search_engine(mongo_connection):
